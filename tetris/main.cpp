@@ -1,3 +1,4 @@
+#include<iostream>
 #include<string>
 #include<ncurses.h>
 #include<thread>
@@ -21,11 +22,17 @@ int main()
   noecho();
   // Create Screen Bufffer using nCurses
   WINDOW *win = newwin(nFieldHeight,nFieldWidth,1,1);
-  WINDOW *win2 = newwin(3,5,20,20);
+  WINDOW *win2 = newwin(4,8,1,15);
   refresh();
-  keypad(stdscr,TRUE); //Allow to use extended ASCII, to get acess to arrow keys.
+  box(win2,0,0);
+  wmove(win2,1,1);
+  wprintw(win2,"SCORE:");
+  wrefresh(win2);
+  keypad(stdscr,TRUE); //Allow to use extended ASCII to get access to arrow keys.
   nodelay(stdscr,TRUE); 
+  curs_set(0); //Make cursor invisible
 
+  srand(time(NULL));
 
   // Building the shapes
   tetromino[0].append("..X.");
@@ -50,14 +57,16 @@ int main()
   bool bRotateHold = false;
 
   //Initialize game
-  int nCurrentPiece = 3;
-  int nCurrentRotation = 0;
-  int nCurrentX = nFieldWidth /2;
+  int nCurrentPiece = rand() % 7;
+  int nCurrentRotation = rand () % 4;
+  int nCurrentX = nFieldWidth /2 - 2;
   int nCurrentY = 0;
   int keyInput;
   
+  int nScore = 0;
   int nSpeed = 20;
   int nSpeedCounter = 0;
+  int nPiecesCounter = 0;
   bool bForceDown = false;
   
   vector<int> vLines;
@@ -70,9 +79,6 @@ int main()
     
     // User input ===================================================
     keyInput = getch();
-    wclear(win2);
-    wprintw(win2,"%d",keyInput);
-    wrefresh(win2);
     
     //Game Logic  ===================================================
     if(keyInput != ERR)
@@ -138,7 +144,13 @@ int main()
           for(int py = 0; py < 4; py++)
             if(tetromino[nCurrentPiece][rotate(px,py,nCurrentRotation)] == 'X')
               pField[(nCurrentX+px) + (nCurrentY + py)*nFieldWidth] = nCurrentPiece + 1;
-        
+
+        if(nPiecesCounter == 10)
+        {
+          nSpeed--;
+          nPiecesCounter = 0;
+        }
+
         //Check have we got any lines
         for(int py = 0; py < 4; py++)
         {
@@ -156,10 +168,13 @@ int main()
             }
           }
         }
+        //Increment score
+				nScore += 25;
+				if(!vLines.empty())	nScore += (1 << vLines.size()) * 100;
         //Pick the new piece
-        nCurrentX = nFieldWidth / 2 - 1;
+        nCurrentX = nFieldWidth / 2 - 2;
 				nCurrentY = 0;
-				nCurrentRotation = 0;
+				nCurrentRotation = rand() % 4;
 				nCurrentPiece = rand() % 7;
 
 				bGameOver = !doesPieceFit(nCurrentPiece, nCurrentRotation, nCurrentX, nCurrentY);
@@ -168,7 +183,6 @@ int main()
 
 
     //Display     ===================================================
-    
     //Draw static field
     for(int x = 0; x < nFieldWidth; x++)
       for(int y = 0; y < nFieldHeight; y++)
@@ -179,6 +193,13 @@ int main()
 			for (int py = 0; py < 4; py++)
 				if (tetromino[nCurrentPiece][rotate(px, py, nCurrentRotation)] != '.')
 					screen[(nCurrentY + py)*nFieldWidth + (nCurrentX + px)] = nCurrentPiece + 65;
+
+    //Draw score
+    wmove(win2,2,1);
+    clrtoeol();
+    wmove(win2,2,1);
+    wprintw(win2,"%d",nScore);
+    wrefresh(win2);
 
     if(!vLines.empty())
     {
@@ -202,9 +223,9 @@ int main()
     wclear(win);
     wprintw(win,screen);
     wrefresh(win);
-    //bGameOver = true;
   }
   endwin();
+  cout << "Final score: " << nScore << endl;
   return(0);
 }
 

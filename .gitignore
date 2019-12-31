@@ -1,4 +1,6 @@
-.o
-.log
+*.o
+*.log
+*.swp
+*.swo
 
 app

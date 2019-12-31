@@ -266,7 +266,7 @@ int main()
 			for (auto &v : vLines)
 				for (int px = 1; px < nFieldWidth - 1; px++)
 				{
-					for (int py = v; py > 0; py--)
+					for (int py = 0; py < v; py++)
 						pField[py * nFieldWidth + px] = pField[(py - 1) * nFieldWidth + px];
 					pField[px] = 0;
 				}

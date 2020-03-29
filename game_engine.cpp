@@ -17,10 +17,9 @@ bool GameEngine::contructConsole()
   bool sucess = false;
 
 	WINDOW *win = newwin(screenHeight,screenWidth,0,0);
-  refresh();
-  printw("Wake up Neo!\n");
 	if(win != NULL)
     sucess = true;
+
   return sucess;
 }
 

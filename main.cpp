@@ -7,7 +7,6 @@ int main()
 	bool doIhaveAconsole;
 	doIhaveAconsole = game.contructConsole();
 	
-  int c = getch();
 	cout << doIhaveAconsole << endl;
 
 	return 0;

@@ -8,9 +8,9 @@ using namespace std;
 class GameEngine
 {
 public:
-	GameEngine(int screenWidth, int screenHeight);
+	GameEngine(int screenWidth = 20, int screenHeight = 15);
 
-	bool contructConsele();
+	bool contructConsole();
 
 	~GameEngine();
 

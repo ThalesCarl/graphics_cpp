@@ -6,8 +6,10 @@ int main()
 
 	bool doIhaveAconsole;
 	doIhaveAconsole = game.contructConsole();
-	
-	cout << doIhaveAconsole << endl;
 
+  game.destroyConsole();
+
+  cout << doIhaveAconsole << endl;
+	  
 	return 0;
 }

@@ -23,7 +23,12 @@ bool GameEngine::contructConsole()
   return sucess;
 }
 
-GameEngine::~GameEngine()
+void GameEngine::destroyConsole()
 {
   endwin();
+}
+
+GameEngine::~GameEngine()
+{
+  cout << "Destroying dreams T.T" << endl;
 }

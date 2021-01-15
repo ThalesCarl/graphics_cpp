@@ -1,6 +1,8 @@
 all: compile run
 
 compile:
-	g++ main_with_game_engine.cpp -lncurses -o app
+	g++ main.cpp -lncurses -o app
 run:
 	./app
+debug:
+	g++ -g main.cpp -lncurses -o app

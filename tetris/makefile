@@ -6,3 +6,5 @@ run:
 	./app
 debug:
 	g++ -g main.cpp -lncurses -o app
+clean:
+	rm app

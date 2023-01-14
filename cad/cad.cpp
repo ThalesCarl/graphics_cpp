@@ -1,6 +1,79 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+// forward declatation
+struct Shape;
+
+struct Node
+{
+    Shape* parent;
+    olc::vf2d position;
+};
+
+struct Shape
+{
+    std::vector<Node> nodes;
+    uint32_t maxNumberOfNodes = 0;
+    olc::Pixel color = olc::GREEN;
+
+    static float worldScale;
+    static olc::vf2d worldOffset;
+
+
+    void WorldToScreen(const olc::vf2d& worldPosition, int& screenX, int& screenY)
+    {
+        screenX = (int)((worldPosition.x - worldOffset.x) * worldScale);
+        screenY = (int)((worldPosition.y - worldOffset.y) * worldScale);
+    }
+
+    Node* GetNextNode(const olc::vf2d& position)
+    {
+        if(nodes.size() == maxNumberOfNodes)
+            return nullptr; // The shape is complete, so no new nodes need to be created
+        
+        Node node;
+        node.parent = this;
+        node.position = position;
+        nodes.push_back(node);
+        return &nodes[nodes.size() -1];
+    }
+
+    // pure virtual function
+    virtual void DrawYourself(olc::PixelGameEngine* pge) = 0;
+
+    void DrawNodes(olc::PixelGameEngine* pge)
+    {
+        for(auto &node : nodes)
+        {
+            int sx, sy;
+            WorldToScreen(node.position, sx, sy);
+            pge->FillCircle(sx, sy, 2, olc::RED);
+        }
+    }
+};
+
+// initialization of static members of Shape struct
+float Shape::worldScale = 1.0;
+olc::vf2d Shape::worldOffset = {0, 0};
+
+// Definition of shapes using the base class Shape
+struct Line : public Shape
+{
+    Line()
+    {
+        maxNumberOfNodes = 2;
+        nodes.reserve(maxNumberOfNodes); // Allocate a constant area of memory for our node vector
+    }
+
+    void DrawYourself(olc::PixelGameEngine* pge) override
+    {
+        int startX, startY, endX, endY;
+        WorldToScreen(nodes[0].position, startX, startY);
+        WorldToScreen(nodes[1].position, endX, endY);
+        pge->DrawLine(startX, startY, endX, endY, color);
+    }
+};
+
 class CadProgram : public olc::PixelGameEngine
 {
 public:
@@ -14,6 +87,13 @@ private:
     olc::vf2d startPan = {0.0, 0.0};
     float zoomScale = 10.0;
     float gridSize = 1.0; // defined in world space
+
+    // Shapes
+    Line* line = nullptr;
+
+
+    // Nodes
+    Node* selectedNode = nullptr;
 
     olc::vf2d cursor = {0.0, 0.0}; // Defined because we want the drawing to snap to grid point
 
@@ -70,6 +150,35 @@ public:
         cursor.x = floorf((mouseAfterZoom.x + 0.5) * gridSize);
         cursor.y = floorf((mouseAfterZoom.y + 0.5) * gridSize);
 
+        if(GetKey(olc::Key::L).bPressed)
+        {
+            line = new Line();
+
+            // Place first node at location of keypress
+            selectedNode = line->GetNextNode(cursor);
+
+            // Start to get the second node
+            selectedNode = line->GetNextNode(cursor);
+        }
+
+        if(selectedNode != nullptr)
+        {
+            selectedNode->position = cursor;
+        }
+
+        if(GetMouse(0).bReleased)
+        {
+            if(line != nullptr)
+            {
+                selectedNode = line->GetNextNode(cursor);
+                if(selectedNode == nullptr) // The shape is completed
+                {
+                    line->color = olc::WHITE;
+                }
+            }
+        }
+
+
         // Clear Screen
         Clear(olc::VERY_DARK_BLUE);
 
@@ -83,10 +192,10 @@ public:
         ScreenToWorld(ScreenWidth(), ScreenHeight(), worldBottomRight);
 
         // Round up the values of the edges in order to avoid lines to be clipped
-        //worldTopLeft.x = floor(worldTopLeft.x);
-        //worldTopLeft.y = floor(worldTopLeft.y);
-        //worldBottomRight.x = ceil(worldBottomRight.x);
-        //worldBottomRight.y = ceil(worldBottomRight.y);
+        worldTopLeft.x = floor(worldTopLeft.x);
+        worldTopLeft.y = floor(worldTopLeft.y);
+        worldBottomRight.x = ceil(worldBottomRight.x);
+        worldBottomRight.y = ceil(worldBottomRight.y);
 
         // Draw grid dots
         for (float x = worldTopLeft.x; x < worldBottomRight.x; x += 10.0 * gridSize)
@@ -109,6 +218,17 @@ public:
         //DrawString({0, 0}, std::string("mouse = " + mouseAfterZoom.str()));
         //DrawString({0, 40}, std::string("offset = " + offset.str()));
 
+
+        // Update shape static translation coefficientes
+        Shape::worldScale = zoomScale;
+        Shape::worldOffset = offset;
+
+        // Start drawind the shapes
+        if(line != nullptr)
+        {
+            line->DrawYourself(this);
+            line->DrawNodes(this);
+        }
         // Draw cursor
         WorldToScreen(cursor, sx, sy);
         DrawCircle(sx, sy, 3, olc::YELLOW);

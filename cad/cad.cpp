@@ -100,6 +100,25 @@ struct Box : public Shape
         pge->DrawRect(startX, startY, endX - startX, endY - startY, color);
     }
 };
+
+struct Circle : public Shape
+{
+    Circle()
+    {
+        maxNumberOfNodes = 2;
+        nodes.reserve(maxNumberOfNodes); // Allocate a constant area of memory for our node vector
+    }
+
+    void DrawYourself(olc::PixelGameEngine* pge) override
+    {
+        float radius = (nodes[1].position - nodes[0].position).mag();
+        int startX, startY, endX, endY;
+        WorldToScreen(nodes[0].position, startX, startY);
+        WorldToScreen(nodes[1].position, endX, endY);
+        pge->DrawLine(startX, startY, endX, endY, color, 0xFF00FF00); // Dashed line representing the radius
+        pge->DrawCircle(startX, startY, radius * worldScale, color);
+    }
+};
 class CadProgram : public olc::PixelGameEngine
 {
 public:
@@ -198,7 +217,17 @@ public:
             // Start to get the second node
             selectedNode = tempShape->GetNextNode(cursor);
         }
+        
+        if(GetKey(olc::Key::C).bPressed)
+        {
+            tempShape = new Circle();
 
+            // Place first node at location of keypress
+            selectedNode = tempShape->GetNextNode(cursor);
+
+            // Start to get the second node
+            selectedNode = tempShape->GetNextNode(cursor);
+        }
 
         if(GetKey(olc::Key::M).bPressed)
         {

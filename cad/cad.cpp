@@ -50,6 +50,16 @@ struct Shape
             pge->FillCircle(sx, sy, 2, olc::RED);
         }
     }
+
+    Node* HitNode(olc::vf2d& position)
+    {
+        for (auto& node : nodes)
+        {
+            if((position - node.position).mag() < 0.01)
+                return &node;
+        }
+        return nullptr;
+    }
 };
 
 // initialization of static members of Shape struct
@@ -89,7 +99,8 @@ private:
     float gridSize = 1.0; // defined in world space
 
     // Shapes
-    Line* line = nullptr;
+    std::list<Line*> shapesList;
+    Line* tempShape = nullptr;
 
 
     // Nodes
@@ -152,28 +163,42 @@ public:
 
         if(GetKey(olc::Key::L).bPressed)
         {
-            line = new Line();
+            tempShape = new Line();
 
             // Place first node at location of keypress
-            selectedNode = line->GetNextNode(cursor);
+            selectedNode = tempShape->GetNextNode(cursor);
 
             // Start to get the second node
-            selectedNode = line->GetNextNode(cursor);
+            selectedNode = tempShape->GetNextNode(cursor);
         }
 
+        if(GetKey(olc::Key::M).bPressed)
+        {
+            selectedNode = nullptr;
+            for(auto& shape : shapesList)
+            {
+                selectedNode = shape->HitNode(cursor);
+                if(selectedNode != nullptr)
+                    break;
+            }
+        }
+
+        // Moving around with the next node of the shape
         if(selectedNode != nullptr)
         {
             selectedNode->position = cursor;
         }
 
+
         if(GetMouse(0).bReleased)
         {
-            if(line != nullptr)
+            if(tempShape != nullptr)
             {
-                selectedNode = line->GetNextNode(cursor);
+                selectedNode = tempShape->GetNextNode(cursor);
                 if(selectedNode == nullptr) // The shape is completed
                 {
-                    line->color = olc::WHITE;
+                    tempShape->color = olc::WHITE;
+                    shapesList.push_back(tempShape);
                 }
             }
         }
@@ -223,11 +248,21 @@ public:
         Shape::worldScale = zoomScale;
         Shape::worldOffset = offset;
 
-        // Start drawind the shapes
-        if(line != nullptr)
+        // Draw the shapes from the list of completed shapes
+        for(auto& shape : shapesList)
         {
-            line->DrawYourself(this);
-            line->DrawNodes(this);
+            if(shape != nullptr)
+            {
+                shape->DrawYourself(this);
+                shape->DrawNodes(this);
+            }
+        }
+
+        // Draw the shape currently being constructed
+        if(tempShape != nullptr)
+        {
+            tempShape->DrawYourself(this);
+            tempShape->DrawNodes(this);
         }
         // Draw cursor
         WorldToScreen(cursor, sx, sy);

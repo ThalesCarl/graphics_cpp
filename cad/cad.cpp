@@ -84,6 +84,22 @@ struct Line : public Shape
     }
 };
 
+struct Box : public Shape
+{
+    Box()
+    {
+        maxNumberOfNodes = 2;
+        nodes.reserve(maxNumberOfNodes); // Allocate a constant area of memory for our node vector
+    }
+
+    void DrawYourself(olc::PixelGameEngine* pge) override
+    {
+        int startX, startY, endX, endY;
+        WorldToScreen(nodes[0].position, startX, startY);
+        WorldToScreen(nodes[1].position, endX, endY);
+        pge->DrawRect(startX, startY, endX - startX, endY - startY, color);
+    }
+};
 class CadProgram : public olc::PixelGameEngine
 {
 public:
@@ -99,8 +115,8 @@ private:
     float gridSize = 1.0; // defined in world space
 
     // Shapes
-    std::list<Line*> shapesList;
-    Line* tempShape = nullptr;
+    std::list<Shape*> shapesList;
+    Shape* tempShape = nullptr;
 
 
     // Nodes
@@ -171,6 +187,18 @@ public:
             // Start to get the second node
             selectedNode = tempShape->GetNextNode(cursor);
         }
+
+        if(GetKey(olc::Key::B).bPressed)
+        {
+            tempShape = new Box();
+
+            // Place first node at location of keypress
+            selectedNode = tempShape->GetNextNode(cursor);
+
+            // Start to get the second node
+            selectedNode = tempShape->GetNextNode(cursor);
+        }
+
 
         if(GetKey(olc::Key::M).bPressed)
         {

@@ -119,6 +119,55 @@ struct Circle : public Shape
         pge->DrawCircle(startX, startY, radius * worldScale, color);
     }
 };
+
+struct Spline : public Shape
+{
+    Spline()
+    {
+        maxNumberOfNodes = 3;
+        nodes.reserve(maxNumberOfNodes); // Allocate a constant area of memory for our node vector
+    }
+
+    void DrawYourself(olc::PixelGameEngine* pge) override
+    {
+        int startX, startY, endX, endY;
+        
+        if(nodes.size() < 3)
+        {
+            // it can only draw line from first to second node
+            WorldToScreen(nodes[0].position, startX, startY);
+            WorldToScreen(nodes[1].position, endX, endY);
+            pge->DrawLine(startX, startY, endX, endY, color, 0xFF00FF00); // Dashed line representing the radius
+        }
+        if(nodes.size() == 3)
+        {
+            // draw first structural line from first to second node
+            WorldToScreen(nodes[0].position, startX, startY);
+            WorldToScreen(nodes[1].position, endX, endY);
+            pge->DrawLine(startX, startY, endX, endY, color, 0xFF00FF00); // Dashed line representing the radius
+
+            // draw second structural line from second to third node
+            WorldToScreen(nodes[1].position, startX, startY);
+            WorldToScreen(nodes[2].position, endX, endY);
+            pge->DrawLine(startX, startY, endX, endY, color, 0xFF00FF00); // Dashed line representing the radius
+
+            // Draw the bezier curve as small lines
+            olc::vf2d currentPoint = nodes[0].position;
+            olc::vf2d nextPoint = currentPoint;
+            for(float t = 0.0; t < 1.0; t += 0.01)
+            {
+                nextPoint = nodes[0].position * (1 - t)*(1 - t) + 
+                               nodes[1].position * 2 * (1 - t)*t + 
+                               nodes[2].position * t * t;
+                WorldToScreen(currentPoint, startX, startY);
+                WorldToScreen(nextPoint, endX, endY);
+                pge->DrawLine(startX, startY, endX, endY, color);
+                currentPoint = nextPoint;
+            }
+
+        }
+    }
+};
 class CadProgram : public olc::PixelGameEngine
 {
 public:
@@ -229,6 +278,17 @@ public:
             selectedNode = tempShape->GetNextNode(cursor);
         }
 
+        if(GetKey(olc::Key::S).bPressed)
+        {
+            tempShape = new Spline();
+
+            // Place first node at location of keypress
+            selectedNode = tempShape->GetNextNode(cursor);
+
+            // Start to get the second node
+            selectedNode = tempShape->GetNextNode(cursor);
+        }
+        // Move the node under the cursor
         if(GetKey(olc::Key::M).bPressed)
         {
             selectedNode = nullptr;

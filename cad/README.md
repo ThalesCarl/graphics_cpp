@@ -2,6 +2,9 @@
 
 A study of how to implement a simple CAD program. Based on [this tutorial](https://www.youtube.com/watch?v=kxKKHKSMGIg) by javidx9.
 
+## Current state
+<img src="screenshot.png" alt="CAD program demonstration" width="800"/>
+
 ## Compilation
 
 ```
@@ -11,6 +14,6 @@ On ubuntu based linux we need to install libpng++-dev
 
 ## Next steps:
 - [x] panning and zooming
-- [ ] basic shapes
+- [x] basic shapes
 - [ ] save data to disk
 - [ ] port the project to OpenGL

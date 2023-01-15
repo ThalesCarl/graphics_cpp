@@ -22,8 +22,8 @@ struct Shape
 
     void WorldToScreen(const olc::vf2d& worldPosition, int& screenX, int& screenY)
     {
-        screenX = (int)((worldPosition.x - worldOffset.x) * worldScale);
-        screenY = (int)((worldPosition.y - worldOffset.y) * worldScale);
+        screenX = (int)((worldOffset.x + worldPosition.x) * worldScale);
+        screenY = (int)((worldOffset.y - worldPosition.y) * worldScale);
     }
 
     Node* GetNextNode(const olc::vf2d& position)
@@ -194,19 +194,19 @@ private:
 
     void WorldToScreen(const olc::vf2d& worldPosition, int& screenX, int& screenY)
     {
-        screenX = (int)((worldPosition.x - offset.x) * zoomScale);
-        screenY = (int)((worldPosition.y - offset.y) * zoomScale);
+        screenX = (int)((offset.x + worldPosition.x) * zoomScale);
+        screenY = (int)((offset.y - worldPosition.y) * zoomScale);
     }
     void ScreenToWorld(int screenX, int screenY, olc::vf2d& worldPosition)
     {
-        worldPosition.x = (float)(screenX / zoomScale + offset.x);
-        worldPosition.y = (float)(screenY / zoomScale + offset.y);
+        worldPosition.x = (float)(+ screenX / zoomScale - offset.x);
+        worldPosition.y = (float)(- screenY / zoomScale + offset.y);
     }
 public:
 	bool OnUserCreate() override
 	{
 		// Called once at the start, so create things here
-        offset = { (float)((-0.5 * ScreenWidth()) * 1/zoomScale), (float)(-0.5 * ScreenHeight() * 1/zoomScale)};
+        offset = { (float)((0.5 * ScreenWidth()) * 1/zoomScale), (float)(0.5 * ScreenHeight() * 1/zoomScale)};
 		return true;
 	}
 
@@ -222,7 +222,7 @@ public:
         }
         if(GetMouse(2).bHeld) // The user is panning the view
         {
-            offset -= (mousePosition - startPan) / zoomScale;
+            offset += (mousePosition - startPan) / zoomScale;
             startPan = mousePosition;
         }
 
@@ -239,7 +239,8 @@ public:
         }
         olc::vf2d mouseAfterZoom;
         ScreenToWorld((int)mousePosition.x, (int)mousePosition.y, mouseAfterZoom);
-        offset += (mouseBeforeZoom - mouseAfterZoom);
+        offset.x += (-mouseBeforeZoom.x + mouseAfterZoom.x);
+        offset.y += (+mouseBeforeZoom.y - mouseAfterZoom.y);
 
         // Snap mouse cursor to nearest grid interval
         cursor.x = floorf((mouseAfterZoom.x + 0.5) * gridSize);

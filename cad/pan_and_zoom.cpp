@@ -14,8 +14,8 @@ public:
 	{
 		// Called once at the start, so create things here
         
-        offsetX = -0.5 * ScreenWidth();
-        offsetY = -0.5 * ScreenHeight();
+        offsetX = 0.5 * ScreenWidth();
+        offsetY = 0.5 * ScreenHeight();
 		return true;
 	}
 
@@ -41,8 +41,8 @@ public:
         if(GetMouse(0).bHeld)
         {
             // std::cout << "before: " << "offSetX = " << offsetX << ", offsetY = " << offsetY << std::endl;
-            offsetX -= (mouseX - startPanX) / scaleX;
-            offsetY -= (mouseY - startPanY) / scaleY;
+            offsetX += (mouseX - startPanX) / scaleX;
+            offsetY += (mouseY - startPanY) / scaleY;
             //throw std::runtime_error("uepa");
 
             // Start "new" pan for next frame update
@@ -84,8 +84,8 @@ public:
         float afterZoom_mouseWorldX, afterZoom_mouseWorldY;
         ScreenToWorld(mouseX, mouseY, afterZoom_mouseWorldX, afterZoom_mouseWorldY);
 
-        offsetX += (beforeZoom_mouseWorldX - afterZoom_mouseWorldX);
-        offsetY += (beforeZoom_mouseWorldY - afterZoom_mouseWorldY);
+        offsetX += (-beforeZoom_mouseWorldX + afterZoom_mouseWorldX);
+        offsetY += (+beforeZoom_mouseWorldY - afterZoom_mouseWorldY);
 
         // Selected Cell
         if(GetMouse(1).bReleased)
@@ -104,7 +104,7 @@ public:
         // Display Grid of 10 horizontal lines
         for (float y = 0.0; y <= 10.0; y++)
         {
-            if(y >= worldTop && y <= worldBottom)
+            if(y >= worldBottom && y <= worldTop)
             {
                 float startX = 0.0, startY = y;
                 float endX = 10.0, endY = y;
@@ -118,7 +118,7 @@ public:
             }
         }
 
-        // Display Grid of 10 horizontal lines
+        // Display Grid of 10 vertical lines
         for (float x = 0.0; x <= 10.0; x++)
         {
             
@@ -141,7 +141,7 @@ public:
         cellRadius = 0.3 * scaleX;
 
         FillCircle(cellX, cellY, cellRadius, olc::RED);
-        
+
         return true;
 	}
 
@@ -163,20 +163,20 @@ private:
 
     void WorldToScreen(float worldX, float worldY, int& screenX, int& screenY)
     {
-        screenX = (int)((worldX - offsetX) * scaleX);
-        screenY = (int)((worldY - offsetY) * scaleY);
+        screenX = (int)((offsetX + worldX) * scaleX);
+        screenY = (int)((offsetY - worldY) * scaleY);
     }
     void ScreenToWorld(int screenX, int screenY, float& worldX, float& worldY)
     {
-        worldX = (float)(screenX / scaleX + offsetX);
-        worldY = (float)(screenY / scaleY + offsetY);
+        worldX = (float)(screenX / scaleX - offsetX);
+        worldY = (float)(offsetY - screenY / scaleY );
     }
 };
 
 int main()
 {
 	PanAndZoom demo;
-	if (demo.Construct(120, 75, 6, 6))
+	if (demo.Construct(600, 375, 6, 6))
 		demo.Start();
 
 	return 0;
